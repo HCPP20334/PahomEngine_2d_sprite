@@ -178,7 +178,11 @@ Custom ImGui widgets for enhanced UI.
 - **stb_image**: For image loading.
 - **Audio::Sound**: Custom audio library (requires Audio.lib).
 - **JoyStickAPI**: Custom gamepad input handling.
-
+## Build
+- **IDE** Visual Studio 2022 x64 (vc143 instruments)
+- **LANG** C++20
+- Add Your Projects ImGui Headers and OpenGL Backends
+- Add PahomEngine.h to Project (#include "PahomEngine.h")
 ## Defines
 - **PAHOM_ENGINE_ID**: Engine identifier (0x17).
 - **LOGO_IMAGE, BACK_IMAGE, BREAD_IMAGE, PAHOM_IMAGE, PAHOM2_IMAGE, PANEl_IMAGE**: Asset indices for image management.
