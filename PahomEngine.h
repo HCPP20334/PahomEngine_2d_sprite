@@ -266,17 +266,20 @@ bool CImage::LoadTextureFromFile(const char* filename, GLuint* out_texture, int*
     }
 }//
 struct KurlikAUDIO {
-    std::string audiolist[5] = { "assets/audio/kurlik.wav",
+    std::string audiolist[6] = { "assets/audio/kurlik.wav",
                                  "assets/audio/voda.wav",
                                  "assets/audio/krik.wav",
                                  "assets/audio/aaa.wav",
-                                 "assets/audio/mrrobot.wav"};
+                                 "assets/audio/mrrobot.wav",
+                                 "assets/audio/a.wav"
+    };
     void play(int64_t i);
     void play2(int64_t i);
+    void play3(int64_t i);
     int64_t idx = 0;
     float masterVolume = 0.02f;
     void pause();
-    Audio::Sound audioDevice,audioDevice2;
+    Audio::Sound audioDevice,audioDevice2,audioDevice3;
    
     
 };
@@ -294,6 +297,13 @@ void KurlikAUDIO::play2(int64_t i) {
     audioDevice2.play();
     audioDevice2.setVolume(masterVolume);
 }
+void KurlikAUDIO::play3(int64_t i) {
+    //  PlaySoundA(file.c_str(), NULL, 1);
+    idx = i;
+    audioDevice3.loadSound(audiolist[idx]);
+    audioDevice3.play();
+    audioDevice3.setVolume(masterVolume + 0.1f);
+}
 void KurlikAUDIO::pause() {
     audioDevice.pause();
 }
@@ -307,7 +317,13 @@ struct STRINGSDATA {
         " лл     лл    лл   лл   лллллллллл лл    лл лл  ллл   лл   \n"
         " ллллллл      ллллллл   ллл    ллл лл    лл лл   л    лл   \n"
         " лл           лл   лл   ллл    ллл   лллл   лл        лл   \n"
-        "                Engine b0.23.                            \n";
+        "                                                           \n"
+        " лллллллл     лл    лл  ллллллл  лл  лл    лл   ллллллл    \n"
+        " лл           лл л  лл  лл       лл  лл л  лл   лл         \n"
+        " лллллллл     лл  л лл  лл лллл  лл  лл  л лл   ллллллл    \n"
+        " лл           лл   ллл  лл   лл  лл  лл   ллл   лл         \n" 
+        " лллллллл     лл    лл  ллллллл  лл  лл    лл   ллллллл    \n"
+        "                Engine b0.24  .                            \n";
 };
 //
 // defines
@@ -321,12 +337,13 @@ struct STRINGSDATA {
 
 //
 struct ASSETSDATA {
-    std::string asset[6] = { "assets/logo.png",   //0
+    std::string asset[7] = { "assets/logo.png",   //0
                              "assets/back.jpg",   //1
                              "assets/bread.png",  //2
                              "assets/pahom.png",  //3
                              "assets/pahom2.png",  //4
-                             "assets/panel.png"
+                             "assets/panel.png",
+                             "assets/777.png"
     }; //5
 
 
@@ -442,6 +459,9 @@ struct EXCEPTIONS {
     }
 };
 struct PahomEngineStruct {
+    //
+    std::string sBuild = "0.4.1510";
+    //
     bool CVsync = true;
     uint64_t fCPoint = 0;
     int64_t fStep = 13;
@@ -495,6 +515,9 @@ struct PahomEngineStruct {
     bool bStartGameFlag = false;
     bool bIsRevesed = false;
     bool bDebugText = false;
+    bool bBoost777 = false;
+    int64_t i64RandBoost = 0;
+    int64_t i64ValuesRands[4] = { 50 , 100, 256, 777 };
     bool GetGamepadKey(int64_t iKey);
     int64_t i64BreadSize[2] = { 64,64 };
     int64_t i64PahomSize[2] = { 128,128 };
@@ -566,12 +589,6 @@ bool PahomEngineStruct::CheckColiision() {
         fPahomPosY < fBreadPosY + i64BreadSize[1] &&
         fPahomPosY + i64PahomSize[1] > fBreadPosY
         );
-    /*return (
-        playerBox.x < breadBox.x + breadBox.width &&
-        playerBox.x + playerBox.width > breadBox.x &&
-        playerBox.y < breadBox.y + breadBox.height &&
-        playerBox.y + playerBox.height > breadBox.y
-        );*/
 }
 void PahomEngineStruct::setItemCenterX(float x) {
     float fItemSizeX = x;
@@ -598,12 +615,18 @@ ImVec4  PahomEngineStruct::RGBA(float r, float g, float b, float a) {
 }
 void PahomEngineStruct::logo() {
     std::string PAHOM_ENGINE =
-        " лллллллллл     лллл    ллл    ллл   лллл   ллл    ллллл   \n"
-        " лл      лл   лл   лл   ллл    ллл лл    лл лл лл лл  лл   \n"
-        " лл     лл    лл   лл   лллллллллл лл    лл лл  ллл   лл   \n"
-        " ллллллл      ллллллл   ллл    ллл лл    лл лл   л    лл   \n"
-        " лл           лл   лл   ллл    ллл   лллл   лл        лл   \n"
-        "                Engine b0.23.                            \n";
+     " ______   ______     __  __     ______     __    __             \n"
+     "/\\  == \\ /\\  __ \\   /\\ \\_\\ \\   /\\  __ \\   /\\ \"-./  \\            \n"
+     "\\ \\  _-/ \\ \\  __ \\  \\ \\  __ \\  \\ \\ \\/\\ \\  \\ \\ \\-./\\ \\           \n"
+     " \\ \\_\\    \\ \\_\\ \\_\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_\\ \\ \\_\\          \n"
+     "  \\/_/     \\/_/\\/_/   \\/_/\\/_/   \\/_____/   \\/_/  \\/_/          \n"
+     "                                                                \n"
+     " ______     __   __     ______     __     __   __     ______    \n"
+     "/\\  ___\\   /\\ \"-.\\ \\   /\\  ___\\   /\\ \\   /\\ \"-.\\ \\   /\\  ___\\   \n"
+     "\\ \\  __\\   \\ \\ \\-.  \\  \\ \\ \\__ \\  \\ \\ \\  \\ \\ \\-.  \\  \\ \\  __\\   \n"
+     " \\ \\_____\\  \\ \\_\\\\\"\\_\\  \\ \\_____\\  \\ \\_\\  \\ \\_\\\\\"\\_\\  \\ \\_____\\ \n"
+     "  \\/_____/   \\/_/ \\/_/   \\/_____/   \\/_/   \\/_/ \\/_/   \\/_____/ \n"
+     "                                                                \n";
     std::cout << PAHOM_ENGINE << std::endl;
 }
 void PahomEngineStruct::progress_bar(float fragtion) {
