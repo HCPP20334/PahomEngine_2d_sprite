@@ -488,6 +488,11 @@ struct STRINGSDATA {
 #define PAHOM_IMAGE  3
 #define PAHOM2_IMAGE 4
 #define PANEl_IMAGE  5
+//
+// 
+
+
+#define engine_bulid std::wstring(L"0.6.98a");
 
 //
 struct ASSETSDATA {
@@ -615,20 +620,25 @@ struct GameEvent {
             i64t = 0;
         }
     }
+    float progress = 0.0f; // Прогресс анимации
+    bool drawReset = false;
+    int64_t linesToDraw = 0;
     void mt_fill(float x_max, float y_max) {
-        static float progress = 0.0f; // Прогресс анимации
-        float lineColor[4] = { clr(0), clr(0), clr(5), clr(255) }; // Цвет линии (красный)
-        float lineThickness = 2.0f; // Толщина линии
+        float lineColor[4] = { clr(0), clr(0), clr(5), clr(255) };
+        float lineThickness = 2.0f;
         int64_t lineCount = static_cast<int64_t>(y_max / lineThickness);
 
         // Анимация
-        progress += ImGui::GetIO().DeltaTime * 0.5f; // Скорость анимации
-       // Сброс для повторения
+        progress += ImGui::GetIO().DeltaTime * IM_PI;
+        if (progress > 1.0f) {
+            progress = (drawReset ? 1.0f : 0.0f); 
+        }
 
-        int64_t linesToDraw = static_cast<int64_t>(lineCount * progress);
+        linesToDraw = static_cast<int64_t>(lineCount * progress);
 
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        for (int64_t ln = 0; ln < linesToDraw && ln < lineCount; ln++) {
+
+        for (int64_t ln = 0; ln < linesToDraw; ln++) {
             float y = ln * lineThickness;
             draw_list->AddLine(
                 ImVec2(0.0f, y),
@@ -636,8 +646,13 @@ struct GameEvent {
                 ImGui::GetColorU32(ImVec4(lineColor[0], lineColor[1], lineColor[2], lineColor[3])),
                 lineThickness
             );
-            if (progress > 1.0f) break;
         }
+        drawReset = true;
+    }
+    void mt_clear() {
+        progress = 0;
+        drawReset = false;
+        linesToDraw = 0;
     }
   
 };
@@ -769,8 +784,10 @@ struct EXCEPTIONS {
             errorCodeA = "Undefined Exception (0x" + std::to_string(pExInfo->ExceptionRecord->ExceptionCode) + ")";
             break;
         }
-        std::wstring sEngineInfoW = L"PahomEngine bulid 0.5";
+        std::wstring sEngineInfoW = L"PahomEngine " + engine_bulid;
         std::wstring stackTraceW = GetStackTrace(pExInfo);
+        std::wstring wsapp = sEngineInfoW;
+        std::wstring titleProject = (wsapp+L"::Exception");
         std::ofstream logFile("crash_log.txt", std::ios::app);
         logFile << "PahomEngine crashed!" << std::endl;
         logFile << "========================" << std::endl;
@@ -780,10 +797,10 @@ struct EXCEPTIONS {
         logFile << "------------------------\n";
         logFile.close();
         std::wstring wlogo(logoPahom.begin(), logoPahom.end());
-        std::wstring msg = L"SweetBreads(PahomEngine) crashed\n=======================\nException: " + std::wstring(errorCode.begin(), errorCode.end()) + L"\n------------------- STACK TRACE ---------------\n" + std::wstring(stackTraceW.begin(), stackTraceW.end()) +
+        std::wstring msg = sEngineInfoW + L" crashed\n=======================\nException: " + std::wstring(errorCode.begin(), errorCode.end()) + L"\n------------------- STACK TRACE ---------------\n" + std::wstring(stackTraceW.begin(), stackTraceW.end()) +
             L"\nSee crash_log.txt for details.\nPlease send crash_log.txt to @hcppstudio.";
         msg += L"\n" +  wlogo;
-        MessageBox(NULL, msg.c_str(), L"ImPlayer::Exception", MB_OK | MB_ICONERROR);
+        MessageBox(NULL, msg.c_str(), titleProject.c_str(), MB_OK | MB_ICONERROR);
 
         return EXCEPTION_EXECUTE_HANDLER;
     }
