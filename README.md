@@ -1,315 +1,258 @@
-# PahomEngine Documentation
+# Документация PahomEngine
+**Сборка 0.6.99a0**  
+<br>
+**Компилятор MSVC**  
+<br>
+**IDE Visual Studio 2026 insiders**  
+<br>
+**Стандарт C++20**
 
-## Overview
-PahomEngine is a lightweight game engine built for Windows, utilizing OpenGL for rendering, ImGui for GUI, and custom audio and input handling. It supports basic 2D game mechanics, including image rendering, audio playback, input management (keyboard and gamepad), and memory monitoring. The engine is designed for simple games with features like collision detection, asset management, and customizable UI elements.
+## Обзор
+PahomEngine — лёгкий игровой движок для Windows. Использует OpenGL 3.3 для рендеринга, ImGui для интерфейса, miniaudio для звука и XInput для геймпада. Поддерживает 2D-механики: текстуры, 3-канальный звук, ввод (клавиатура/геймпад), коллизии, проверку ассетов, мониторинг памяти, обработку крашей и кастомные виджеты UI. Предназначен для простых аркад с рандомизацией, событиями и отладкой.
 
-## Key Components
+**SWEET BREADS** — аркадная демка: Пахом собирает сладкий хлеб.
+
+---
+
+## Основные компоненты
 
 ### 1. PahomEngineStruct
-The core structure that encapsulates the engine's functionality and state.
+Главная структура, содержащая всю функциональность и состояние движка.
 
-#### Key Members
-- **CVsync**: Boolean to enable/disable V-Sync.
-- **fCPoint**: Frame counter (uint64_t).
-- **fStep**: Step size for movement (int64_t, default 13).
-- **img**: Unique pointer to `CImage` for image handling.
-- **ptrGamepad1**: Unique pointer to `JoyStickAPI` for gamepad input.
-- **bSettings**: Boolean to toggle settings menu.
-- **fillColorRGBA**: ImVec4 for UI color customization.
-- **i64WindowSize**: Array storing window dimensions (default: 800x600).
-- **fPahomPosX, fPahomPosY**: Player position coordinates.
-- **fMaxPahomPosX, fMaxPahomPosY**: Maximum player position boundaries.
-- **fBreadPosX, fBreadPosY**: Position of a game object (e.g., "bread").
-- **bLoadingFrame, bLoadingFrameOK**: Booleans for loading state.
-- **bControlsIsGamepad, bControlsIsKeyboard**: Input mode flags.
-- **bDebug**: Debug mode toggle.
-- **bFullscreen**: Fullscreen mode toggle.
-- **bGameOver**: Game over state.
-- **i64CPUDelay**: CPU delay for frame pacing (default: 10ms).
-- **bStartGame**: Game start flag.
-- **fStepMove**: Movement speed (default: 6.0f).
-- **i64BreadSize, i64PahomSize**: Sizes for game objects (bread: 64x64, player: 128x128).
+#### Ключевые поля
+- **CVsync**: Флаг включения/выключения V-Sync (`bool`).
+- **fCPoint**: Счётчик кадров (`uint64_t`).
+- **fStep**: Шаг перемещения (`int64_t`, по умолчанию 13).
+- **img**: Уникальный указатель на `CImage` — загрузка и рендер текстур.
+- **ptrGamepad1**: Уникальный указатель на `JoyStickAPI` — ввод с геймпада (XInput).
+- **bSettings**: Флаг открытия меню настроек (`bool`).
+- **fillColorRGBA**: `ImVec4` — цвет заливки интерфейса.
+- **i64WindowSize**: Массив с размерами окна (по умолчанию: 800×600) `int64_t[1]` .
+- **fPahomPosX, fPahomPosY**: Координаты игрока `float`.
+- **fMaxPahomPosX, fMaxPahomPosY**: Границы движения игрока.`float`
+- **fBreadPosX, fBreadPosY**: Позиция игрового объекта («хлеб»).`float`
+- **bLoadingFrame, bLoadingFrameOK**: Флаги состояния загрузки.(`bool`)
+- **bControlsIsGamepad, bControlsIsKeyboard**: Режимы ввода.(`bool`)
+- **bDebug**: Режим отладки.(`bool`)
+- **bFullscreen**: Полноэкранный режим.(`bool`)
+- **bGameOver**: Состояние «игра окончена».(`bool`)
+- **i64CPUDelay**: Задержка CPU для контроля FPS (по умолчанию: 2 мс).`int64_t`
+- **bStartGame**: Флаг запуска игры.(`bool`)
+- **fStepMove**: Скорость перемещения (по умолчанию: 6.0f).`float`
+- **i64BreadSize, i64PahomSize**: Размеры объектов (хлеб: 64×64, игрок: 128×128).
+- **audio**: Экземпляр `KurlikAUDIO` — 3-канальное воспроизведение звука. 
+- **Event**: `GameEvent` — текст, прогресс-бары, анимации.
+- **Mem**: `MEMORYDATA` — мониторинг ОЗУ (всего/используется/свободно, в ГБ).
+- **Exceptions**: Указатель на `EXCEPTIONS` — обработка крашей и стек-трейсы.
+- **pDiff**: Указатель на `Diffinity` — настройка сложности.
+- **Bench64ptr**: Указатель на `cpu_bench64` — многопоточный бенчмарк CPU.
 
-#### Methods
-- **StyleLoad()**: Configures ImGui styles with a dark theme and custom colors.
-- **RGBA(float r, float g, float b, float a)**: Converts RGBA values to ImVec4.
-- **setTextCenter(const char* text)**: Centers text horizontally.
-- **setItemCenterX(float x)**: Centers an item horizontally by size.
-- **setItemCenter(ImVec2 Size)**: Centers an item both horizontally and vertically.
-- **HwndWSizeA(HWND HwNd)**: Retrieves window size from a window handle.
-- **InputI64(const char* id, int64_t* v)**: Renders a 64-bit integer input field.
-- **InputFloat(const char* id, float* v)**: Renders a float input field.
-- **reloadBreadPos()**: Randomizes the position of the "bread" object.
-- **rand64(int64_t in_v)**: Generates a random 64-bit integer up to `in_v`.
-- **randfloat(float in_v)**: Generates a random float up to `in_v`.
-- **CheckColiision()**: Checks for collision between player and bread objects.
-- **GetGamepadKey(int64_t iKey)**: Checks if a specific gamepad button is pressed.
-- **Text(ImVec4 col, std::string text)**: Adds colored text to the event buffer.
-- **Tbuffer()**: Renders the event text buffer.
-- **log(std::string text)**: Logs text to the console.
-- **progress_bar(float fraction)**: Displays a console-based progress bar.
-- **logo()**: Prints the engine's ASCII logo to the console.
+#### Методы
+- **StyleLoad()**: Настраивает тёмную тему ImGui с кастомными цветами.
+- **RGBA(float r, float g, float b, float a)**: Преобразует RGBA в `ImVec4`.
+- **setTextCenter(const char* text)**: Центрирует текст по горизонтали.
+- **setItemCenterX(float x)**: Центрирует элемент по горизонтали.
+- **setItemCenter(ImVec2 Size)**: Центрирует элемент по обеим осям.
+- **setTextCenterXY(const char* text)**: Центрирует текст по X и Y.
+- **HwndWSizeA(HWND HwNd)**: Получает размер окна из дескриптора.
+- **InputI64(const char* id, int64_t* v)**: Поле ввода 64-битного целого.
+- **InputFloat(const char* id, float* v)**: Поле ввода float.
+- **reloadBreadPos()**: Рандомизирует позицию «хлеба».
+- **rand64(int64_t in_v)**: Генерирует случайное 64-битное число до `in_v`.
+- **randfloat(float in_v)**: Генерирует случайное float до `in_v`.
+- **CheckColiision()**: Проверка AABB-коллизии между игроком и хлебом.
+- **GetGamepadKey(int64_t iKey)**: Проверка нажатия кнопки геймпада.
+- **progress_bar(float fraction)**: Консольный прогресс-бар.
+- **logo()**: Вывод цветного ASCII-арта в консоль.
+- **log(std::string text)**: Логирование с префиксом `[PahomEngine::]`.
+- **Text(ImVec4 col, std::string text)**: Вывод цветного текста через `GameEvent`.
 
-### 2. CImage
-Handles image loading and rendering using OpenGL and stb_image.
+---
 
-#### Key Members
-- **x, y**: Arrays for storing image positions.
-- **fIctx, fIcty**: Current image dimensions.
-- **gl_buffer**: OpenGL texture buffer.
-- **CICharBuffer**: Image data buffer.
+### 2. CImage — Работа с текстурами
+Загрузка и рендер PNG/JPG через `stb_image`.
 
-#### Methods
-- **CreateImg()**: Initializes an image (not implemented in provided code).
-- **LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height, unsigned char* imgBuffer)**: Loads an image file into an OpenGL texture.
-- **ResizeImage(uint64_t fCArrayFloat)**: Resizes the image based on array index.
-- **InitCImage(std::string png_file)**: Initializes an image from a PNG file.
-- **CreateImage(int64_t w, int64_t h)**: Renders an image with ImGui.
-- **getAspectRatio(int x, int y)**: Returns the aspect ratio as a string (e.g., "4:3").
-- **GetImageSize(int width, int height)**: Calculates image size in VRAM (width * height * 4 for RGBA).
-- **GetFileSize(const std::string& filename)**: Returns the file size in bytes.
+#### Ключевые поля
+- **gl_buffer**: ID текстуры OpenGL.
+- **fIctx, fIcty**: Кэшированные размеры текстуры.
 
-### 3. KurlikAUDIO
-Manages audio playback with a custom `Audio::Sound` class.
+#### Методы
+- **LoadTextureFromFile(const char* filename, ...)**: Загружает изображение в OpenGL, выводит первые 16 байт в hex.
+- **CreateImage(int64_t w, int64_t h)**: Рендер через `ImGui::Image()`.
+- **getAspectRatio(int x, int y)**: Возвращает строку `"16:9"`, `"4:3"` и т.д.
+- **ResizeImage(uint64_t fCArrayFloat)**: Применяет предустановленные размеры из массивов `x[]`, `y[]`.
+- **GetImageSize(int w, int h)**: Размер в VRAM (байты, RGBA).
+- **GetFileSize(const std::string& filename)**: Размер файла в байтах.
 
-#### Key Members
-- **audiolist**: Array of audio file paths (e.g., "kurlik.wav").
-- **idx**: Current audio index.
-- **masterVolume**: Global volume control (default: 0.02f).
-- **audioDevice, audioDevice2**: Audio playback devices.
+---
 
-#### Methods
-- **play(int64_t i)**: Plays audio from `audiolist[i]` on `audioDevice`.
-- **play2(int64_t i)**: Plays audio from `audiolist[i]` on `audioDevice2`.
-- **pause()**: Pauses `audioDevice`.
+### 3. KurlikAUDIO — Аудиосистема
+3 одновременных канала через `Audio::Sound` (miniaudio).
 
-### 4. STRINGSDATA
-Handles logging and engine branding.
+#### Ключевые поля
+- **audioDevice, audioDevice2, audioDevice3**: Три независимых звуковых устройства.
+- **masterVolume**: По умолчанию `0.02f`.
+- **audiolist[11]**: Пути к `.wav` файлам в `assets/audio/` `std::string[]`.
+- **audioGain**: Мин/макс усиление в дБ.
+- **audioTime**: Текущее/максимальное время в секундах.
 
-#### Key Members
-- **PAHOM_ENGINE**: ASCII art for the engine logo.
+#### Методы
+- **play(int64_t i)**: Воспроизведение на канале 0.
+- **play2(int64_t i)**: Воспроизведение на канале 1.
+- **play3(int64_t i)**: Воспроизведение на канале 2.
+- **VuePlay(int64_t device, int64_t file)**: Воспроизведение выбранного файла на выбранном устройстве.
+- **vue()**: ImGui-панель управления звуком (устройство, файл, громкость, гейн, таймлайн).
+- **getGain(int64_t idx)**: Обновляет значения гейна.
+- **getTimeline(int64_t idx)**: Обновляет текущее время.
+- **pause()**: Пауза текущего воспроизведения.
+- **setReplay(bool)**: Зацикливание канала 3.
 
-#### Methods
-- **log(std::string text, std::string moduleName)**: Logs text with a module prefix.
+---
 
-### 5. ASSETSDATA
-Manages game assets (images).
+### 4. JoyStickAPI — Геймпад
+Обёртка XInput с вибрацией и кэшированием батареи.
 
-#### Key Members
-- **asset**: Array of asset file paths (e.g., "logo.png", "back.jpg").
+#### Ключевые методы
+- **IsConnected()**: Проверка подключения.
+- **GetState()**: Текущее состояние `XINPUT_STATE`.
+- **Vibrate(int64_t left, int64_t right)**: Вибрация с `clamp(0, 65535)`.
+- **BatLevel()**: Кэширует заряд батареи в `xBattery` (вызов 1 раз/кадр).
 
-#### Methods
-- **validFiles(std::string file)**: Checks if a file exists.
+---
 
-### 6. IMAGEDATA
-Stores image-related data for rendering.
+### 5. Расширения ImGui
+Кастомные виджеты в пространстве имён `ImGui`.
 
-#### Key Members
-- **TextureArray**: Array of OpenGL texture IDs.
-- **TextureBufferArray**: Array of texture buffers.
-- **TextureX, TextureY**: Arrays for texture dimensions.
+- **CustomToggle(const char* label, bool* v)**: Анимированный переключатель с подсветкой при включении.
+- **Spinner(const char* label, ...)**: Крутящийся индикатор загрузки.
+- **InputInt64()**, **SliderInt64()**: 64-битные поля ввода и слайдеры.
 
-### 7. KEYMAPDATA
-Manages input bindings for keyboard and gamepad.
+---
 
-#### Key Members
-- **u8FORWARD, u8BACK, u8RESET, u8SPACE, u8ButtonLeft, u8ButtonRight**: Keyboard key bindings.
-- **i64BACKGamepad, i64FORWARDGamepad, i64UPGamepad, i64AGamepad, i64START**: Gamepad button mappings.
-- **kbDelay, vMaxDelay**: Keyboard input delay settings.
+### 6. EXCEPTIONS — Обработка крашей
+Использует `dbghelp.lib` для стек-трейсов.
 
-#### Methods
-- **reMap(uint8_t key, uint8_t newBind)**: Reassigns a key binding.
+#### Ключевые методы
+- **BugReport()**: Устанавливает `SetUnhandledExceptionFilter(CrashHandler)`.
+- **CrashHandler()**: Логирует исключение, модуль, функцию, файл, строку → `crash_log.txt`.
+- **GetStackTrace()**: Проход по стеку через `StackWalk64`.
+- **Write()**: Запись пользовательской ошибки с указателем стека.
 
-### 8. MEMORYDATA
-Monitors system memory usage.
+---
 
-#### Key Members
-- **i64MemoryTotal, i64MemoryFree, i64MemoryUsed**: Memory metrics in GB.
-- **MemoryPtr**: Windows `MEMORYSTATUS` structure.
+### 7. MEMORYDATA — Мониторинг ОЗУ
+Через `GlobalMemoryStatusEx`.
 
-#### Methods
-- **getData(int64_t* mem, int64_t idx_data)**: Retrieves memory data (total, used, free).
-- **MemoryInfo()**: Returns a formatted string with memory information.
+#### Ключевые методы
+- **getData(int64_t* mem, int64_t idx)**: Заполняет всего/используется/свободно в ГБ.
+- **MemoryInfo()**: Форматированная строка с данными ОЗУ.
 
-### 9. GameEvent
-Manages in-game text events.
+---
 
-#### Key Members
-- **TextBufferStr**: Stores event text.
-- **col**: Text color (ImVec4).
-- **isTextHidden**: Toggles text visibility.
-- **i64WindowSize**: Window dimensions for text positioning.
+### 8. GameEvent — Игровой UI
+Текст, прогресс-бары, анимация заполнения экрана.
 
-#### Methods
-- **TextBuffer()**: Renders centered text.
-- **Text(ImVec4 col, std::string text)**: Adds colored text to the buffer.
-- **setColorText(ImVec4 col)**: Sets the text color.
-- **clearEvent()**: Clears the text buffer.
+#### Ключевые поля
+- **TextBufferStr**: Текущий текст события.
+- **col**: Цвет текста.
+- **progress**: Прогресс анимации.
+- **linesToDraw**: Количество линий в анимации заполнения.
 
-### 10. EXCEPTIONS
-Handles error logging.
+#### Методы
+- **Text(ImVec4 col, std::string text)**: Устанавливает текст и цвет.
+- **TextBuffer()**: Центрированный вывод текста.
+- **mt_fill(x_max, y_max)**: Анимированное заполнение экрана линиями.
+- **mt_clear()**: Сброс анимации.
+- **TimerToClear()**: Автоскрытие текста через 100 кадров.
 
-#### Key Members
-- **ErrorTextures**: Error flag for texture issues.
-- **sLastError**: Last error message.
-- **pLastStack**: Pointer to the error stack.
+---
 
-#### Methods
-- **Write(std::string t, void* pErrorSegment)**: Logs an error with stack information.
+### 9. Diffinity — Система сложности
+Настраиваемые интервалы спавна.
 
-### 11. ImGui Extensions
-Custom ImGui widgets for enhanced UI.
+#### Ключевые поля
+- **i64diff[3]**: Базовые значения `{16, 24, 8}`.
+- **ccDiff**: `{"Легкая", "Средняя", "Поехавший", "Рандомная"}`.
+- **diffArray[3]**: Диапазоны спавна `{{4,6}, {6,10}, {12,20}}`.
 
-#### Methods
-- **CustomToggle(const char* label, bool* v)**: Renders a toggle switch with a glow effect when active.
-- **Spinner(const char* label, float radius, int thickness, const ImU32& color)**: Displays a spinning loader animation.
-- **InputInt64(const char* label, int64_t* v, int64_t step, int64_t step_fast, ImGuiInputTextFlags flags)**: Input field for 64-bit integers.
-- **SliderInt64(const char* label, int64_t* v, int64_t v_min, int64_t v_max, const char* format, ImGuiSliderFlags flags)**: Slider for 64-bit integers.
+#### Методы
+- **setDiff(int64_t idx)**: Установка активной сложности.
 
-### 12. Utility Functions
-- **fstack(void* reg, std::string param_name)**: Logs a pointer and returns its value as int64_t.
-- **str_stack(void* reg, const std::string& param_name)**: Logs a string pointer and returns its content.
-- **RGBAtoIV4(int r, int g, int b, int a)**: Converts RGBA values to ImVec4.
+---
 
-## Dependencies
-- **Windows API**: For window management and memory queries.
-- **OpenGL**: For rendering textures.
-- **ImGui**: For GUI rendering (includes imgui_impl_opengl3 and imgui_impl_win32).
-- **stb_image**: For image loading.
-- **Audio::Sound**: Custom audio library (requires Audio.lib).
-- **JoyStickAPI**: Custom gamepad input handling.
-## Build
-- **IDE** Visual Studio 2022 x64 (vc143 instruments)
-- **LANG** C++20
-- Add Your Projects ImGui Headers and OpenGL Backends
-- Add PahomEngine.h to Project (#include "PahomEngine.h")
-## Defines
-- **PAHOM_ENGINE_ID**: Engine identifier (0x17).
-- **LOGO_IMAGE, BACK_IMAGE, BREAD_IMAGE, PAHOM_IMAGE, PAHOM2_IMAGE, PANEl_IMAGE**: Asset indices for image management.
+### 10. cpu_bench64 — Бенчмарк CPU
+Многопоточный тест генерации хэшей.
 
-## Usage
-1. **Initialization**:
-   - Create a `PahomEngineStruct` instance using `std::make_unique<PahomEngineStruct>()`.
-   - Load assets using `CImage::InitCImage()` and validate with `ASSETSDATA::validFiles()`.
-   - Configure ImGui styles with `StyleLoad()`.
+#### Ключевые поля
+- **i64MaxSize**: Всего операций (1 000 000).`int64_t`
+- **i32max_thread**: `std::jthread::hardware_concurrency()`.`int32_t`
 
-2. **Game Loop**:
-   - Handle input using `KEYMAPDATA` and `GetGamepadKey()`.
-   - Update game state (e.g., `fPahomPosX`, `fBreadPosX`) with `CheckColiision()` for gameplay logic.
-   - Render images with `CImage::CreateImage()` and UI with ImGui extensions.
-   - Play audio using `KurlikAUDIO::play()` or `play2()`.
+#### Методы
+- **mt()**: Запуск бенчмарка по всем ядрам.
+- **hashFn128(int64_t sz)**: Генерация строки и логирование размера.
 
-3. **Debugging**:
-   - Use `log()` for console output.
-   - Monitor memory with `MEMORYDATA::MemoryInfo()`.
-   - Handle errors with `EXCEPTIONS::Write()`.
-
-## Example
+---
+### 11. mathValues
+- minv(a,b) - аналог std::min
+- maxv(a,b) - аналог std::max
+- random(max_value) - Генератор рандома
 ```cpp
+int64_t a = 150;
+int64_t b = 255;
+PahomEngine->math->minv<int64_t>(a,b);// - вернет int64_t a;
 //
- init ImGui OpenGL 
+PahomEngine->math->maxv<float>(0.4f,0.05f);//  - вернет float 0.4f;
 //
-PahomEngine->StyleLoad(); // Apply ImGui styles
-PahomEngine->img->LoadTextureFromFile(reinterpret_cast<const char*>(PahomEngine->assets.asset[tid].c_str()),
+PahomEngine->math->random<double>(144.0f);// - вернет число от 0.0f до 100.0f;
+
+```
+## Ассеты
+```cpp
+#define LOGO_IMAGE 0
+#define BACK_IMAGE 1
+#define BREAD_IMAGE 2
+// ...
+std::string asset[11] = { "assets/logo.png", ... };//`std::string`
+// Использование в игровом цикле
+if(!PahomEngine->bStartGame)
+{
+static int32_t tid = 0;
+if(!PahomEngine->img->LoadTextureFromFile(
+                    reinterpret_cast<const char*>(PahomEngine->assets.asset[tid].c_str()),
                     &PahomEngine->ImageData.TextureArray[tid],
                     &PahomEngine->ImageData.TextureX[tid],
                     &PahomEngine->ImageData.TextureY[tid],
-                    &PahomEngine->ImageData.TextureBufferArray[tid]));
-PahomEngine->audio.play(0); // Play kurlik.wav
-PahomEngine->Text(engine->RGBA(255, 255, 255, 255), "Game Started!");
-PahomEngine->Tbuffer(); // Render text
-//
- Load Texture to Videomemory
-//
-PahomEngine->img->LoadTextureFromFile(reinterpret_cast<const char*>(PahomEngine->assets.asset[0].c_str()),
-                    &PahomEngine->ImageData.TextureArray[0],
-                    &PahomEngine->ImageData.TextureX[0],
-                    &PahomEngine->ImageData.TextureY[0],
-                    &PahomEngine->ImageData.TextureBufferArray[0]));
-// used
-ImGui::Image((int64_t)(void*)PahomEngine->ImageData.TextureArray[2], ImVec2(64, 64));
-// and
-int64_t ptrint64_t(GLuint tx) {
-    return (int64_t)(void*)tx;
+                    &PahomEngine->ImageData.TextureBufferArray[tid])){
+                        std::cout<<" Texture Falled!!" << std::endl;
+                    }
+tid++;
+if(tid > PahomEngine->img->i64MaxTexturesToArray){
+    tid = PahomEngine->img->i64MaxTexturesToArray;
+    PahomEngine->bStartGame = true;
 }
- ImGui::Image(ptrint64_t(PahomEngine->ImageData.TextureArray[0]), ImVec2(imageSizeX, imageSizeY));
-key event and Gamepad event
-
-// fragment to my Game controls
- if (PahomEngine->bControlsIsGamepad) { // check flag controller
-     if (PahomEngine->ptrGamepad1->IsConnected()) { // check state gamepad connection
-         if (PahomEngine->GetGamepadKey(PahomEngine->keyMap.i64FORWARDGamepad)) { // check event button gam,epad
-             PahomEngine->keyMap.kbDelay++;
-             if (PahomEngine->keyMap.kbDelay == PahomEngine->keyMap.vMaxDelay) {
-                 PahomEngine->fPahomPosX += PahomEngine->fStep;
-                 PahomEngine->bIsRevesed = true;
-                 if (PahomEngine->fPahomPosX >= PahomEngine->fMaxPahomPosX) {
-                     PahomEngine->fPahomPosX = PahomEngine->fMaxPahomPosX;
-                 }
-                 PahomEngine->keyMap.kbDelay = 0;
-             }
-             keyPresedStr = "FORWARD" + (PahomEngine->keyMap.i64FORWARDGamepad);
-         }
-         if (PahomEngine->GetGamepadKey(PahomEngine->keyMap.i64BACKGamepad)) {//PahomEngine->keyMap.u8BACKGamepad
-             PahomEngine->keyMap.kbDelay++;
-             if (PahomEngine->keyMap.kbDelay == PahomEngine->keyMap.vMaxDelay) {
-                 PahomEngine->bIsRevesed = false;
-                 PahomEngine->fPahomPosX -= PahomEngine->fStep;
-                 if (PahomEngine->fPahomPosX <= PahomEngine->fMinPahomPosX) {
-                     PahomEngine->fPahomPosX = PahomEngine->fMinPahomPosX;
-                 }
-                 PahomEngine->keyMap.kbDelay = 0;
-             }
-             keyPresedStr = (const char*)("BACK" + PahomEngine->keyMap.u8BACK);
-         }
-         if (PahomEngine->GetGamepadKey(PahomEngine->keyMap.i64UPGamepad)) {
-             PahomEngine->fPahomPosY = 300.0f;
-         }
-     }
- }
- 
-
- if (PahomEngine->bControlsIsKeyboard) {
-     if (GetAsyncKeyState(PahomEngine->keyMap.u8BACK)) {//PahomEngine->keyMap.u8FORWARD
-         PahomEngine->keyMap.kbDelay++;
-         if (PahomEngine->keyMap.kbDelay == PahomEngine->keyMap.vMaxDelay) {
-             PahomEngine->fPahomPosX += PahomEngine->fStep;
-             PahomEngine->bIsRevesed = true;
-             if (PahomEngine->fPahomPosX >= PahomEngine->fMaxPahomPosX) {
-                 PahomEngine->fPahomPosX = PahomEngine->fMaxPahomPosX;
-             }
-             PahomEngine->keyMap.kbDelay = 0;
-         }
-         keyPresedStr = "FORWARD" + (PahomEngine->keyMap.u8FORWARD);
-     }
-     if (GetAsyncKeyState(PahomEngine->keyMap.u8FORWARD)) {//PahomEngine->keyMap.u8BACK
-         PahomEngine->keyMap.kbDelay++;
-         if (PahomEngine->keyMap.kbDelay == PahomEngine->keyMap.vMaxDelay) {
-             PahomEngine->bIsRevesed = false;
-             PahomEngine->fPahomPosX -= PahomEngine->fStep;
-             if (PahomEngine->fPahomPosX <= PahomEngine->fMinPahomPosX) {
-                 PahomEngine->fPahomPosX = PahomEngine->fMinPahomPosX;
-             }
-             PahomEngine->keyMap.kbDelay = 0;
-         }
-         keyPresedStr = (const char*)("BACK" + PahomEngine->keyMap.u8BACK);
-     }
+}
+if(PahomEngine->bStartGame){
+    //main logic
+}
+// загрузка через for
+if(!PahomEngine->bStartGame)
+{
+ for(int64_t tid = 0; tid < PahomEngine->img->i64MaxTexturesToArray;tid++){
+    if(!PahomEngine->img->LoadTextureFromFile(
+                    reinterpret_cast<const char*>(PahomEngine->assets.asset[tid].c_str()),
+                    &PahomEngine->ImageData.TextureArray[tid],
+                    &PahomEngine->ImageData.TextureX[tid],
+                    &PahomEngine->ImageData.TextureY[tid],
+                    &PahomEngine->ImageData.TextureBufferArray[tid])){
+                        std::cout<<" Texture Falled!!" << std::endl;
+                    }
+                    if(tid > PahomEngine->img->i64MaxTexturesToArray){
+                     tid = PahomEngine->img->i64MaxTexturesToArray;
+                      PahomEngine->bStartGame = true;
+}
  }
 
-Main code
-
-//
-//
-
-clear GL and destroy frame
-//
-```
-
-## Notes
-- The engine is in version b0.23, indicating an early development stage.
-- The `JoyStick.h` header is commented out in some places, suggesting incomplete gamepad support.
-- Ensure all asset files exist in the specified paths (`assets/`).
-- The engine assumes RGBA textures for image rendering.
-- Audio playback relies on an external `Audio::Sound` class, which must be properly linked.
-
-This documentation provides a comprehensive overview of the PahomEngine's structure and functionality. For further details, refer to the source code or contact the developer.
+}
+if(PahomEngine->bStartGame){
+    //main logic
+}
