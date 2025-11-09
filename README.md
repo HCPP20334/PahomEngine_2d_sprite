@@ -1,5 +1,5 @@
 # Документация PahomEngine
-**Сборка 0.7**  
+**Сборка 0.7.1**  
 <br>
 **Компилятор MSVC**  
 <br>
@@ -204,6 +204,19 @@ PahomEngine->math->minv<int64_t>(a,b);// - вернет int64_t a;
 PahomEngine->math->maxv<float>(0.4f,0.05f);//  - вернет float 0.4f;
 //
 PahomEngine->math->random<double>(144.0f);// - вернет число от 0.0f до 100.0f;
+
+```
+---
+### 12. castValues
+- cast_all<type>(v) - метод кастования из одного типа в другой
+- cast_to_string<type>(a,b) - метод кастования типа в std::string
+```cpp
+int8_t a = 150;
+int64_t b = PahomEngine->cast->cast_all<int64_t>(a); // 150 int64_t
+//
+std::string strdata = " Value: " + PahomEngine->cast->cast_to_string<float>(0.4f);// Value : 0.4
+## 13. GameUI (beta)
+bool TextButton
 
 ```
 ## Ассеты
