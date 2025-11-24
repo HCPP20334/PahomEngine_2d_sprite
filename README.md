@@ -1,5 +1,5 @@
 # Документация PahomEngine
-**Сборка 0.7.1**  
+**Сборка 0.8.2**  
 <br>
 **Компилятор MSVC**  
 <br>
@@ -218,6 +218,29 @@ std::string strdata = " Value: " + PahomEngine->cast->cast_to_string<float>(0.4f
 ## 13. GameUI (beta)
 bool TextButton
 
+```
+### 13. bufferio
+- print аналог std::print из C++23 но в C++20)
+- (beta) alloc_ptr - свой аллокатор памяти
+```cpp
+// print
+float fData = 255.0f;
+PahomEngine->cio->print("float data {}",fData);// Работать как с std::format 
+// (beta)
+struct MyStruct{
+int64_t i64Pff = 0;
+};
+PahomEngine->cio->alloc_ptr<MyStruct,MyStructPtr>();
+MyStructPtr->i64Pff = 4;
+```
+### 14. d64Vec2 - точный вектор на long double (в движке есть double64_t)
+```
+d64Vec2 d64PosXY = {0.5555542L,0.233333L};
+Used operators
+d64->_D(d64Vec2 a,d64Vec2 b);// divide a / b
+d64->_S(d64Vec2 a,d64Vec2 b);// sep a * b
+d64->_M(d64Vec2 a,d64Vec2 b);// minus a - b
+d64->_P(d64Vec2 a,d64Vec2 b);// add a + b
 ```
 ## Ассеты
 ```cpp
